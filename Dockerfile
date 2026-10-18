@@ -25,7 +25,7 @@ USER node
 EXPOSE 3000
 
 ENV PORT=3000
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
   CMD curl -f http://localhost:3000/api/tags || exit 1
