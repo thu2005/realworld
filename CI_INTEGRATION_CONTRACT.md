@@ -1,5 +1,7 @@
 # CI/CD Integration Contract
 
+> Person E integration extension: [Jenkins image lifecycle](docs/jenkins-image-mode.md) defines the implemented source/image modes, parameters, trigger policy and cleanup. The original stage sequence below applies to source mode. Image mode uses prepare → validate → verify Docker → pull → run → smoke → reports/cleanup. Source mode remains available.
+
 Tài liệu này quy định đầu vào, đầu ra và quy ước bắt buộc khi các thành viên tích hợp GitHub Actions, Jenkins và test harness vào repository này.
 
 ## 1. System Under Test
