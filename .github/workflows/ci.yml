@@ -132,6 +132,9 @@ jobs:
             --reporter xunit \
             --reporter-option "output=test-reports/junit/mocha.xml"
 
+      - name: "Run Task C-1 - Jest Unit Tests (Coverage >= 80%)"
+        run: npm run test:unit
+
       - name: Upload test report artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
@@ -192,6 +195,9 @@ jobs:
           ./realworld/api/run-api-tests.sh \
             --reporters cli,junit \
             --reporter-junit-export test-reports/junit/newman.xml
+
+      - name: "Run Task C-2 - SuperTest API Tests"
+        run: npm run test:api
 
       - name: Stop server
         if: always()
