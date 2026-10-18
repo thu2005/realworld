@@ -7,3 +7,6 @@ coverage
 .DS_Store
 db.sqlite3
 db.sqlite3-journal
+.local
+__pycache__
+.jenkins-integration-state.json

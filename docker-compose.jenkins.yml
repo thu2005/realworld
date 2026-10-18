@@ -7,9 +7,13 @@ services:
     restart: unless-stopped
     ports:
       # Use a high host port to avoid existing local Jenkins/services.
-      - "${JENKINS_HTTP_PORT:-18080}:8080"
+      - "127.0.0.1:${JENKINS_HTTP_PORT:-18080}:8080"
+    group_add:
+      - "${DOCKER_GID:-0}"
     volumes:
       - jenkins_home:/var/jenkins_home
+      # Local trusted seminar jobs only: this grants control of the host daemon.
+      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/login"]
       interval: 15s

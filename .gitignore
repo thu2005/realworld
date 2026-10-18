@@ -57,6 +57,9 @@ tmp.*
 
 # CI test artifacts
 /test-reports/
+/.local/
+/.jenkins-integration-state.json
+__pycache__/
 
 # typescript
 *.tsbuildinfo
