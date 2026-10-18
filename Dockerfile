@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY package.json ./
 
 # Clean npm cache and install dependencies per CI_INTEGRATION_CONTRACT
-RUN npm cache clean --force && npm install --no-audit --no-fund
+RUN npm cache clean --force && npm install --no-audit --no-fund --ignore-scripts && (npm rebuild sqlite3 || true)
 
 # Copy application files and directories explicitly to avoid copying sensitive data
 COPY api ./api
@@ -26,11 +26,9 @@ COPY pages ./pages
 COPY public ./public
 COPY app.js auth.js db.ts front.ts lib.js next.config.js next-env.d.ts style.scss tsconfig.json ./
 
-# Build Next.js application
-RUN npm run build-dev
+# Build Next.js application and set user permissions in merged RUN layer
+RUN npm run build-dev && chown -R node:node /app
 
-# Use non-root user for security
-RUN chown -R node:node /app
 USER node
 
 EXPOSE 3000
