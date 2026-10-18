@@ -11,7 +11,7 @@ Tài liệu này quy định đầu vào, đầu ra và quy ước bắt buộc 
 
 ## 2. Runtime và cài dependency
 
-- **MUST:** Dùng Node.js `14.17.0` và npm `6.14.13` theo trường `engines` trong `package.json` cho pipeline hiện tại.
+- **MUST:** Dùng Node.js `14.21.3` và npm `6.14.18` theo trường `engines` trong `package.json` cho pipeline hiện tại. Đây là bản cuối của Node 14, cần thiết để dependency lint hiện tại hỗ trợ `node:path`.
 - **MUST:** Dùng `npm install` khi repository chưa có `package-lock.json`.
 - **MUST NOT:** Không tự đổi sang `npm ci`. Chỉ được dùng `npm ci` sau khi nhóm bỏ `package-lock.json` khỏi `.gitignore` và commit lockfile hợp lệ.
 - **MUST:** Checkout submodule trước khi build hoặc chạy API test:
