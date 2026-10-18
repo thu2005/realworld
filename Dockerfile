@@ -1,16 +1,7 @@
 # syntax=docker/dockerfile:1
-FROM node:14.21.3-bullseye-slim
+FROM node:14.21.3-bullseye
 
 WORKDIR /app
-
-# Install native dependencies required for node modules (sqlite3, python, build tools)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    g++ \
-    git \
-    make \
-    python3 \
-  && rm -rf /var/lib/apt/lists/*
 
 COPY package.json ./
 
