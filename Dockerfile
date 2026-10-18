@@ -5,11 +5,11 @@ WORKDIR /app
 
 # Install native dependencies required for node modules (sqlite3, python, build tools)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    make \
+    curl \
     g++ \
     git \
-    curl \
+    make \
+    python3 \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json ./
@@ -17,10 +17,21 @@ COPY package.json ./
 # Clean npm cache and install dependencies per CI_INTEGRATION_CONTRACT
 RUN npm cache clean --force && npm install --no-audit --no-fund
 
-COPY . .
+# Copy application files and directories explicitly to avoid copying sensitive data
+COPY api ./api
+COPY bin ./bin
+COPY front ./front
+COPY models ./models
+COPY pages ./pages
+COPY public ./public
+COPY app.js auth.js db.ts front.ts lib.js next.config.js next-env.d.ts style.scss tsconfig.json ./
 
 # Build Next.js application
 RUN npm run build-dev
+
+# Use non-root user for security
+RUN chown -R node:node /app
+USER node
 
 EXPOSE 3000
 
