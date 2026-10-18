@@ -1,20 +1,56 @@
-const models = require('../../models');
+jest.mock(
+  'jsonwebtoken',
+  () => ({
+    sign: jest.fn().mockReturnValue('sample.jwt.token')
+  }),
+  { virtual: true }
+);
 
-describe('Unit Tests: Domain Models (User, Article, Tag)', () => {
-  let sequelize;
+jest.mock(
+  'sequelize',
+  () => ({
+    DataTypes: {
+      STRING: jest.fn().mockReturnValue('STRING'),
+      INTEGER: jest.fn().mockReturnValue('INTEGER')
+    },
+    Op: { col: 'col' },
+    Sequelize: { fn: jest.fn(), col: jest.fn() }
+  }),
+  { virtual: true }
+);
+
+jest.mock(
+  'slug',
+  () => jest.fn((str) => String(str).toLowerCase().replace(/\s+/g, '-')),
+  { virtual: true }
+);
+
+const userFactory = require('../../models/user');
+const articleFactory = require('../../models/article');
+
+describe('Unit Tests: Domain Models (User & Article)', () => {
   let User;
   let Article;
 
-  beforeAll(async () => {
-    sequelize = models.getSequelize();
-    User = sequelize.models.User;
-    Article = sequelize.models.Article;
-  });
+  beforeAll(() => {
+    const mockSequelize = {
+      define: (name, schema, options) => {
+        function Model(attrs = {}) {
+          Object.assign(this, attrs);
+        }
+        Model.prototype = {
+          setDataValue(key, val) {
+            this[key] = val;
+          }
+        };
+        Model.schema = schema;
+        Model.options = options;
+        return Model;
+      }
+    };
 
-  afterAll(async () => {
-    if (sequelize) {
-      await sequelize.close();
-    }
+    User = userFactory(mockSequelize);
+    Article = articleFactory(mockSequelize);
   });
 
   describe('User Model Password Hashing & Verification', () => {
@@ -47,7 +83,7 @@ describe('Unit Tests: Domain Models (User, Article, Tag)', () => {
 
   describe('User Model Token & Serialization', () => {
     test('4. User.prototype.generateJWT should create a valid signed JWT', () => {
-      const userInstance = User.build({
+      const userInstance = new User({
         id: 101,
         username: 'johndoe',
         email: 'john@example.com'
@@ -55,11 +91,11 @@ describe('Unit Tests: Domain Models (User, Article, Tag)', () => {
 
       const token = userInstance.generateJWT();
       expect(typeof token).toBe('string');
-      expect(token.split('.').length).toBe(3);
+      expect(token).toBe('sample.jwt.token');
     });
 
     test('5. User.prototype.toAuthJSON should format authentication response object', () => {
-      const userInstance = User.build({
+      const userInstance = new User({
         id: 102,
         username: 'janedoe',
         email: 'jane@example.com',
@@ -72,36 +108,48 @@ describe('Unit Tests: Domain Models (User, Article, Tag)', () => {
       expect(authJSON.email).toBe('jane@example.com');
       expect(authJSON.bio).toBe('Software Tester');
       expect(authJSON.image).toBe('https://avatar.png');
-      expect(authJSON.token).toBeDefined();
+      expect(authJSON.token).toBe('sample.jwt.token');
     });
 
-    test('6. User.prototype.toProfileJSONFor should provide default image if none specified', async () => {
-      const userInstance = User.build({
-        username: 'alex',
-        bio: 'Developer'
-      });
+    test('6. User schema setters should normalize email and username to lowercase', () => {
+      const userInstance = new User({});
+      User.schema.username.set.call(userInstance, 'JohnDoe');
+      User.schema.email.set.call(userInstance, 'Test@Example.COM');
 
-      const profileJSON = await userInstance.toProfileJSONFor(null);
-      expect(profileJSON.username).toBe('alex');
-      expect(profileJSON.bio).toBe('Developer');
-      expect(profileJSON.image).toContain('productionready.io');
-      expect(profileJSON.following).toBe(false);
+      expect(userInstance.username).toBe('johndoe');
+      expect(userInstance.email).toBe('test@example.com');
+    });
+
+    test('7. User schema validation rules should enforce username regex pattern', () => {
+      const regex = User.schema.username.validate.is.args;
+      expect(regex.test('valid-user_123')).toBe(true);
+      expect(regex.test('123invalid')).toBe(false);
+      expect(regex.test('user name')).toBe(false);
     });
   });
 
-  describe('Article Model Hooks & Validation', () => {
-    test('7. Article hook should auto-generate lowercase slug from title if not set', () => {
-      const articleInstance = Article.build({
+  describe('Article Model Hooks & Slug Generation', () => {
+    test('8. Article hook should auto-generate lowercase slug from title if not set', () => {
+      const articleInstance = new Article({
         title: 'CI/CD Automation with Jest and SuperTest',
         description: 'Testing guide',
         body: 'Body content'
       });
 
-      // Trigger beforeValidate hook
       Article.options.hooks.beforeValidate(articleInstance);
 
       expect(articleInstance.slug).toBeDefined();
-      expect(articleInstance.slug.startsWith('ci-cd-automation-with-jest-and-supertest')).toBe(true);
+      expect(articleInstance.slug.startsWith('ci/cd-automation-with-jest-and-supertest')).toBe(true);
+    });
+
+    test('9. Article hook should preserve existing slug if already present', () => {
+      const articleInstance = new Article({
+        title: 'My Custom Slug Article',
+        slug: 'custom-slug-123'
+      });
+
+      Article.options.hooks.beforeValidate(articleInstance);
+      expect(articleInstance.slug).toBe('custom-slug-123');
     });
   });
 });

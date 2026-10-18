@@ -1,4 +1,5 @@
 const lib = require('../../lib');
+const config = require('../../front/config');
 
 describe('Unit Tests: Helpers & Utilities (lib.js)', () => {
   describe('validatePositiveInteger', () => {
@@ -93,6 +94,58 @@ describe('Unit Tests: Helpers & Utilities (lib.js)', () => {
       };
       const ip = lib.getClientIp(mockReq);
       expect(ip).toBeUndefined();
+    });
+  });
+
+  describe('getIndexTags', () => {
+    test('14. should extract tag names array from Tag model query', async () => {
+      const mockSequelize = {
+        models: {
+          Tag: {
+            findAll: jest.fn().mockResolvedValue([
+              { name: 'angular' },
+              { name: 'react' },
+              { name: 'testing' }
+            ])
+          }
+        }
+      };
+
+      const tags = await lib.getIndexTags(mockSequelize);
+      expect(tags).toEqual(['angular', 'react', 'testing']);
+    });
+  });
+
+  describe('deleteOldestForDemo', () => {
+    test('15. should delete oldest rows when demo mode is active and excess rows exist', async () => {
+      const originalIsDemo = config.isDemo;
+      config.isDemo = true;
+
+      const mockModel = {
+        findAll: jest.fn().mockResolvedValue([{ id: 1 }, { id: 2 }]),
+        destroy: jest.fn().mockResolvedValue(2)
+      };
+
+      await lib.deleteOldestForDemo(mockModel);
+      expect(mockModel.findAll).toHaveBeenCalled();
+      expect(mockModel.destroy).toHaveBeenCalled();
+
+      config.isDemo = originalIsDemo;
+    });
+
+    test('16. should not delete if no old rows are returned in demo mode', async () => {
+      const originalIsDemo = config.isDemo;
+      config.isDemo = true;
+
+      const mockModel = {
+        findAll: jest.fn().mockResolvedValue([]),
+        destroy: jest.fn()
+      };
+
+      await lib.deleteOldestForDemo(mockModel);
+      expect(mockModel.destroy).not.toHaveBeenCalled();
+
+      config.isDemo = originalIsDemo;
     });
   });
 });

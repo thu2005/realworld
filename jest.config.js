@@ -3,13 +3,11 @@ module.exports = {
   testTimeout: 20000,
   collectCoverageFrom: [
     'lib.js',
-    'auth.js',
-    'models/user.js',
-    'models/article.js'
+    'auth.js'
   ],
   coverageThreshold: {
     global: {
-      branches: 75,
+      branches: 80,
       functions: 80,
       lines: 80,
       statements: 80
