@@ -61,7 +61,11 @@ pipeline {
 
     stage('Install') {
       steps {
-        sh 'npm install'
+        sh '''
+          set -eu
+          npm cache clean --force
+          npm install --no-audit --no-fund
+        '''
       }
     }
 
