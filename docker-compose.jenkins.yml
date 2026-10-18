@@ -1,0 +1,21 @@
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: jenkins/Dockerfile
+    image: realworld-jenkins:local
+    restart: unless-stopped
+    ports:
+      # Use a high host port to avoid existing local Jenkins/services.
+      - "${JENKINS_HTTP_PORT:-18080}:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/login"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+volumes:
+  jenkins_home:

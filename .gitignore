@@ -55,5 +55,8 @@ tmp.*
 /.now/
 .now
 
+# CI test artifacts
+/test-reports/
+
 # typescript
 *.tsbuildinfo
