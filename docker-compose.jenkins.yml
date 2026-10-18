@@ -6,8 +6,8 @@ services:
     image: realworld-jenkins:local
     restart: unless-stopped
     ports:
-      - "${JENKINS_HTTP_PORT:-8080}:8080"
-      - "${JENKINS_AGENT_PORT:-50000}:50000"
+      # Use a high host port to avoid existing local Jenkins/services.
+      - "${JENKINS_HTTP_PORT:-18080}:8080"
     volumes:
       - jenkins_home:/var/jenkins_home
     healthcheck:

@@ -6,7 +6,7 @@ Tài liệu này dựng pipeline Jenkins tối thiểu cho RealWorld theo `CI_IN
 
 - `jenkins/Dockerfile`: Jenkins LTS trên Java 21, kèm Node.js 14.21.3, npm 6.14.18 và công cụ build native.
 - `jenkins/plugins.txt`: danh sách plugin tối thiểu cho Pipeline, GitHub, credentials và JUnit.
-- `docker-compose.jenkins.yml`: chạy Jenkins ở port 8080 và lưu dữ liệu bằng named volume.
+- `docker-compose.jenkins.yml`: chạy Jenkins ở host port 18080 và lưu dữ liệu bằng named volume.
 - `Jenkinsfile`: checkout RealWorld, cài dependency, lint, test, build và publish report.
 
 Jenkins chạy build ngay trên controller chỉ để giữ demo seminar đơn giản. Đây không phải cấu hình khuyến nghị cho hệ thống production.
@@ -16,7 +16,7 @@ Jenkins chạy build ngay trên controller chỉ để giữ demo seminar đơn 
 - Docker Desktop đang chạy ở Linux containers mode.
 - Máy có tối thiểu khoảng 4 GB RAM trống cho Docker/Jenkins và đủ dung lượng để build Next.js.
 - Branch chứa các file Jenkins đã được commit và push lên GitHub.
-- Port 8080 và 50000 chưa bị ứng dụng khác sử dụng. Có thể đổi host port bằng `JENKINS_HTTP_PORT` và `JENKINS_AGENT_PORT`.
+- Host port 18080 chưa bị ứng dụng khác sử dụng. Có thể đổi bằng `JENKINS_HTTP_PORT`.
 
 ## 3. Khởi động Jenkins
 
@@ -34,7 +34,7 @@ docker compose -f docker-compose.jenkins.yml exec jenkins \
   cat /var/jenkins_home/secrets/initialAdminPassword
 ```
 
-Mở `http://localhost:8080`, nhập mật khẩu và tạo tài khoản admin. Các plugin cần thiết đã được cài từ `jenkins/plugins.txt`; không cần cài Blue Ocean hoặc Allure ở bước MVP.
+Mở `http://localhost:18080`, nhập mật khẩu và tạo tài khoản admin. Các plugin cần thiết đã được cài từ `jenkins/plugins.txt`; không cần cài Blue Ocean hoặc Allure ở bước MVP.
 
 ## 4. Tạo job `ci-cd-demo`
 
@@ -80,14 +80,14 @@ Webhook chỉ cấu hình khi Jenkins có URL mà GitHub truy cập được; `l
 
 Nếu Jenkins mới chỉ chạy local, dùng **Build with Parameters** để hoàn thành demo pipeline trước; không mở port Internet chỉ để có webhook.
 
-Nếu container báo `healthy` nhưng `http://localhost:8080` không truy cập được, chạy:
+Nếu container báo `healthy` nhưng `http://localhost:18080` không truy cập được, chạy:
 
-```bash
-docker compose -f docker-compose.jenkins.yml port jenkins 8080
+```powershell
 docker compose -f docker-compose.jenkins.yml up -d --force-recreate
+Invoke-WebRequest -UseBasicParsing http://localhost:18080/login
 ```
 
-Nếu lệnh đầu không trả về host port, restart Docker Desktop rồi tạo lại container. Đây là lỗi port forwarding của Docker Desktop, không sửa bằng cách đổi port bên trong Jenkins.
+Kết quả mong đợi là HTTP 200. Một số phiên bản Docker Desktop có thể để `docker compose port jenkins 8080` hiển thị `:0` dù URL vẫn truy cập được, vì vậy hãy kiểm tra bằng HTTP. Nếu HTTP không phản hồi, kiểm tra host port bằng `Get-NetTCPConnection -State Listen -LocalPort 18080`, rồi chọn port trống qua `JENKINS_HTTP_PORT` và tạo lại container.
 
 ## 7. Dừng và khởi động lại
 
