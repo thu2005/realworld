@@ -260,12 +260,39 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Restore node modules
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-modules-${{ hashFiles('package.json') }}
+
       - name: Run security vulnerability audit
         run: |
           mkdir -p test-reports
           echo "Running npm audit scan..."
           npm audit --json > test-reports/security-audit.json || true
-          npm audit || true
+
+          echo "## 🛡️ Security Vulnerability Scan Summary" >> $GITHUB_STEP_SUMMARY
+          if [ -f test-reports/security-audit.json ]; then
+            node -e "
+              try {
+                const report = JSON.parse(require('fs').readFileSync('test-reports/security-audit.json'));
+                const vulns = (report.metadata && report.metadata.vulnerabilities) || report.vulnerabilities || {};
+                console.log('| Severity | Count |');
+                console.log('| --- | --- |');
+                console.log('| Info | ' + (vulns.info || 0) + ' |');
+                console.log('| Low | ' + (vulns.low || 0) + ' |');
+                console.log('| Moderate | ' + (vulns.moderate || 0) + ' |');
+                console.log('| High | ' + (vulns.high || 0) + ' |');
+                console.log('| Critical | ' + (vulns.critical || 0) + ' |');
+              } catch (e) {
+                console.log('Unable to parse audit summary: ' + e.message);
+              }
+            " >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "Evaluating security vulnerabilities (fails on high/critical per Task B-5)..."
+          npm audit --audit-level=high
 
       - name: Upload security audit report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -398,3 +425,48 @@ jobs:
               --data-urlencode "IMAGE_TAG=${{ github.sha }}" \
               -o test-reports/jenkins-response.txt -w "HTTP Status: %{http_code}\n" || true
           fi
+
+  allure-report:
+    name: Allure Report Dashboard
+    needs: [unit-test, api-test]
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Download unit test reports
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: unit-test-report
+          path: test-reports/unit
+
+      - name: Download API test reports
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: api-test-report
+          path: test-reports/api
+
+      - name: Aggregate test results for Allure
+        run: |
+          mkdir -p test-reports/allure-results
+          find test-reports/unit test-reports/api -type f \( -name "*.xml" -o -name "*.json" \) -exec cp {} test-reports/allure-results/ \;
+          echo "Aggregated raw results in test-reports/allure-results:"
+          ls -la test-reports/allure-results
+
+      - name: Generate Allure Report
+        uses: simple-elf/allure-report-action@385367cde61ac68c2568a117f7579f7f148dc459 # v1.15
+        if: always()
+        with:
+          allure_results: test-reports/allure-results
+          allure_report: allure-report
+          allure_history: allure-history
+          keep_reports: 20
+
+      - name: Upload Allure Report Artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: allure-report-dashboard
+          path: allure-report
+          retention-days: 7
