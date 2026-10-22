@@ -1,3 +1,5 @@
+/* global cy */
+
 describe('RealWorld public UI', () => {
   it('loads the home page and public navigation', () => {
     cy.visit('/')
@@ -20,7 +22,9 @@ describe('RealWorld public UI', () => {
     cy.location('pathname').should('eq', '/user/login')
     cy.contains('h1', 'Sign in').should('be.visible')
     cy.get('input[type="email"][placeholder="Email"]').should('be.visible')
-    cy.get('input[type="password"][placeholder="Password"]').should('be.visible')
+    cy.get('input[type="password"][placeholder="Password"]').should(
+      'be.visible'
+    )
     cy.get('button[type="submit"]').should('contain.text', 'Sign in')
   })
 })
