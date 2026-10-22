@@ -59,7 +59,8 @@ Image mode fails on invalid/missing inputs; it never falls back to source or a d
 3. Pull the exact image reference and record image ID and registry digests. Local mode records `input_origin=local-only` and is not evidence of GHCR handoff.
 4. Create a network and application container unique to job/build, labeled with ownership. Run using the inspected image ID, preserving SQLite development configuration and internal port 3000.
 5. Start a probe container using Node from that same image. Call the application on its private network; require HTTP 200 and a JSON `tags` array, with bounded retries/request timeouts.
-6. In post action, collect diagnostics, remove owned app/probe containers and network, then publish JUnit and archive reports even if earlier stages failed.
+6. Temporarily connect the trusted Jenkins container to that network and run Cypress against the application container name. No host port is published.
+7. In post action, collect diagnostics, disconnect Jenkins, remove owned app/probe containers and network, then publish JUnit, Allure and archived artifacts even if an earlier stage failed.
 
 No host port is needed for smoke testing. Jenkins localhost is not the sibling container. No workspace bind mount is used for the probe, avoiding Docker host/container path mismatches.
 
@@ -71,6 +72,9 @@ No host port is needed for smoke testing. Jenkins localhost is not the sibling c
 | `test-reports/logs/container-inspect.json` | Container diagnostics when available |
 | `test-reports/logs/smoke-response.json` | Last probe outcome/HTTP body when the probe ran |
 | `test-reports/logs/pull.log` | Successful registry pull output |
+
+The Cypress and Allure extension is documented in
+[Jenkins Cypress and Allure setup](jenkins-cypress-allure.md).
 
 Cleanup only removes resources carrying the current run's ownership label, never prunes the host or removes shared images/volumes. A cleanup failure is visible; it cannot turn an earlier failure into success.
 

@@ -1,0 +1,12 @@
+{
+  "baseUrl": "http://realworld.invalid",
+  "integrationFolder": "cypress/e2e",
+  "pluginsFile": "cypress/plugins/index.js",
+  "supportFile": "cypress/support/index.js",
+  "screenshotsFolder": "test-reports/cypress/screenshots",
+  "videosFolder": "test-reports/cypress/videos",
+  "video": true,
+  "viewportWidth": 1280,
+  "viewportHeight": 720,
+  "defaultCommandTimeout": 10000
+}
