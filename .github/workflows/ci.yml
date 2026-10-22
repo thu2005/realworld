@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ "next", "master", "main" ]
+    branches: [ "next", "master", "main", "ci-github-actions" ]
   pull_request:
     branches: [ "next", "master", "main" ]
   workflow_dispatch:
