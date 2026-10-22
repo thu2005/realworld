@@ -1,5 +1,7 @@
 # Jenkins setup for the RealWorld seminar
 
+> Image-mode integration: see [Jenkins image lifecycle](jenkins-image-mode.md). The source instructions below describe the original baseline; use SCM branch `next` (or the reviewed integration branch), source ref `next`, and `RUN_MODE=source`. The integration job is triggered by Actions API, not a second GitHub push webhook.
+
 Tài liệu này dựng pipeline Jenkins tối thiểu cho RealWorld theo `CI_INTEGRATION_CONTRACT.md`. Pipeline hiện chạy trực tiếp từ source; chưa phụ thuộc Docker image, Cypress hoặc Allure của thành viên khác.
 
 ## 1. Thành phần đã chuẩn bị
