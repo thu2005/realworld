@@ -91,6 +91,37 @@ pipeline {
       steps { sh 'python3 jenkins/image_smoke.py smoke' }
     }
 
+    stage('Connect UI test runner') {
+      when { expression { params.RUN_MODE == 'image' } }
+      steps { sh 'python3 jenkins/image_smoke.py connect-agent' }
+    }
+
+    stage('Cypress UI tests') {
+      when { expression { params.RUN_MODE == 'image' } }
+      steps {
+        script {
+          env.CYPRESS_BASE_URL = sh(
+            script: '''python3 -c "import json; print(json.load(open('.jenkins-integration-state.json'))['base_url'])"''',
+            returnStdout: true
+          ).trim()
+        }
+        sh '''
+          set -eu
+          rm -rf "$TEST_REPORT_DIR/allure-results" \
+                 "$TEST_REPORT_DIR/cypress/screenshots" \
+                 "$TEST_REPORT_DIR/cypress/videos"
+          mkdir -p node_modules/@shelex
+          ln -sfn /usr/local/lib/node_modules/@shelex/cypress-allure-plugin \
+            node_modules/@shelex/cypress-allure-plugin
+          cypress --version
+          cypress run \
+            --project . \
+            --config "baseUrl=$CYPRESS_BASE_URL" \
+            --env "allure=true,allureResultsPath=$TEST_REPORT_DIR/allure-results"
+        '''
+      }
+    }
+
     stage('Checkout') {
       when { expression { params.RUN_MODE == 'source' } }
       steps {
@@ -173,7 +204,15 @@ pipeline {
           try {
             junit testResults: 'test-reports/junit/*.xml', allowEmptyResults: true
           } finally {
-            archiveArtifacts artifacts: 'test-reports/**/*', allowEmptyArchive: true
+            try {
+              if (fileExists('test-reports/allure-results')) {
+                allure commandline: 'allure',
+                  includeProperties: false,
+                  results: [[path: 'test-reports/allure-results']]
+              }
+            } finally {
+              archiveArtifacts artifacts: 'test-reports/**/*', allowEmptyArchive: true
+            }
           }
         }
       }
