@@ -133,15 +133,43 @@ jobs:
             --reporter-option "output=test-reports/junit/mocha.xml"
 
       - name: "Run Task C-1 - Jest Unit Tests (Coverage >= 80%)"
-        run: npm run test:unit
+        run: |
+          mkdir -p test-reports/junit
+          JEST_JUNIT_OUTPUT_DIR="test-reports/junit" JEST_JUNIT_OUTPUT_NAME="jest-unit.xml" npm run test:unit
 
       - name: Upload test report artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: unit-test-report
-          path: test-reports/junit/mocha.xml
+          path: |
+            test-reports/junit/mocha.xml
+            test-reports/junit/jest-unit.xml
           if-no-files-found: ignore
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          if-no-files-found: ignore
+
+      - name: Generate Test & Coverage Summary
+        if: always()
+        run: |
+          echo "## 🧪 Jest Unit Test & Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage/coverage-summary.json ]; then
+            echo "| Metric | Covered / Total | Percentage |" >> $GITHUB_STEP_SUMMARY
+            echo "| --- | --- | --- |" >> $GITHUB_STEP_SUMMARY
+            node -e "
+              const s = JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total;
+              console.log('| Statements | ' + s.statements.covered + '/' + s.statements.total + ' | ' + s.statements.pct + '% |');
+              console.log('| Branches | ' + s.branches.covered + '/' + s.branches.total + ' | ' + s.branches.pct + '% |');
+              console.log('| Functions | ' + s.functions.covered + '/' + s.functions.total + ' | ' + s.functions.pct + '% |');
+              console.log('| Lines | ' + s.lines.covered + '/' + s.lines.total + ' | ' + s.lines.pct + '% |');
+            " >> $GITHUB_STEP_SUMMARY
+          fi
 
   api-test:
     name: API Tests
@@ -197,7 +225,9 @@ jobs:
             --reporter-junit-export test-reports/junit/newman.xml
 
       - name: "Run Task C-2 - SuperTest API Tests"
-        run: npm run test:api
+        run: |
+          mkdir -p test-reports/junit
+          JEST_JUNIT_OUTPUT_DIR="test-reports/junit" JEST_JUNIT_OUTPUT_NAME="jest-api.xml" npm run test:api
 
       - name: Stop server
         if: always()
@@ -213,6 +243,7 @@ jobs:
           name: api-test-report
           path: |
             test-reports/junit/newman.xml
+            test-reports/junit/jest-api.xml
             test-reports/server.log
           if-no-files-found: ignore
 

@@ -5,6 +5,11 @@ module.exports = {
     'lib.js',
     'auth.js'
   ],
+  coverageReporters: [
+    'text',
+    'lcov',
+    'json-summary'
+  ],
   coverageThreshold: {
     global: {
       branches: 80,
@@ -12,5 +17,19 @@ module.exports = {
       lines: 80,
       statements: 80
     }
-  }
+  },
+  reporters: [
+    'default',
+    [
+      'jest-junit',
+      {
+        outputDirectory: process.env.JEST_JUNIT_OUTPUT_DIR || 'test-reports/junit',
+        outputName: process.env.JEST_JUNIT_OUTPUT_NAME || 'jest-unit.xml',
+        classNameTemplate: '{classname}',
+        titleTemplate: '{title}',
+        ancestorSeparator: ' › ',
+        usePathForSuiteName: 'true'
+      }
+    ]
+  ]
 };
