@@ -19,7 +19,7 @@ BUILD_TIMEOUT_SECONDS = 1800
 def required(name):
     value = os.environ.get(name, '').strip()
     if not value:
-        raise RuntimeError('{} must be configured as a GitHub Secret'.format(name))
+        raise RuntimeError('{} must be configured in the environment'.format(name))
     return value
 
 
@@ -95,11 +95,15 @@ def main():
         'RUN_MODE': 'image',
         'IMAGE_REPO': image_repo,
         'IMAGE_TAG': image_tag,
-        'PULL_IMAGE': 'true',
-        'GHCR_PRIVATE': 'false',
+        'PULL_IMAGE': os.environ.get('PULL_IMAGE', 'true'),
+        'GHCR_PRIVATE': os.environ.get('GHCR_PRIVATE', 'false'),
         'SUT_REPO_URL': source_url,
         'SUT_REF': source_ref,
     }
+    # Optional overrides also allow the same client to demonstrate a failed gate.
+    for name in ('SMOKE_PATH', 'SMOKE_TIMEOUT_SECONDS'):
+        if name in os.environ:
+            parameters[name] = os.environ[name]
     with request(endpoint, authorization, parameters) as response:
         queue_url = response.headers.get('Location', '')
     if not queue_url:

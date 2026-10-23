@@ -117,6 +117,8 @@ pipeline {
           cypress run \
             --project . \
             --config "baseUrl=$CYPRESS_BASE_URL" \
+            --reporter junit \
+            --reporter-options "mochaFile=$TEST_REPORT_DIR/junit/cypress-[hash].xml" \
             --env "allure=true,allureResultsPath=$TEST_REPORT_DIR/allure-results"
         '''
       }
