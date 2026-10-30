@@ -80,6 +80,9 @@ def write_report(data):
 
 
 def main():
+    # A failed request must never leave a previous successful result behind.
+    if REPORT.exists():
+        REPORT.unlink()
     base_url = required('JENKINS_URL').rstrip('/') + '/'
     user = required('JENKINS_USER')
     token = required('JENKINS_TOKEN')

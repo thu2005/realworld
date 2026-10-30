@@ -2,7 +2,7 @@
 
 > Image-mode integration: see [Jenkins image lifecycle](jenkins-image-mode.md). Cypress and Allure are documented in [Jenkins Cypress and Allure setup](jenkins-cypress-allure.md). The source instructions below describe the original baseline; use SCM branch `next` (or the reviewed integration branch), source ref `next`, and `RUN_MODE=source`. The integration job is triggered by Actions API, not a second GitHub push webhook.
 
-Tài liệu này dựng pipeline Jenkins tối thiểu cho RealWorld theo `CI_INTEGRATION_CONTRACT.md`. Pipeline hiện chạy trực tiếp từ source; chưa phụ thuộc Docker image, Cypress hoặc Allure của thành viên khác.
+Tài liệu này hướng dẫn dựng Jenkins cho RealWorld theo `CI_INTEGRATION_CONTRACT.md`. Pipeline hỗ trợ source mode và image mode; image mode đã tích hợp Docker smoke test, Cypress và Allure. Hướng dẫn demo ngắn và bàn giao nằm trong [Person E handoff](person-e-handoff.md).
 
 ## 1. Thành phần đã chuẩn bị
 
@@ -44,11 +44,13 @@ Mở `http://localhost:18080`, nhập mật khẩu và tạo tài khoản admin.
 2. Ở phần **Pipeline**, chọn **Pipeline script from SCM**.
 3. Chọn SCM **Git**.
 4. Nhập URL fork của nhóm, ví dụ `https://github.com/thu2005/realworld.git`.
-5. Chọn branch chứa `Jenkinsfile`, ví dụ `*/jenkins`.
+5. Chọn branch `*/next` chứa Jenkinsfile đã tích hợp của nhóm.
 6. Đặt **Script Path** là `Jenkinsfile`, sau đó Save.
-7. Chọn **Build with Parameters**:
+7. Với job mới, tham số chỉ xuất hiện sau lượt chạy đầu. Chọn **Build Now** một lần để Jenkins đọc Jenkinsfile và khởi tạo tham số (mặc định chạy source mode), sau đó chọn **Build with Parameters**:
+   - `RUN_MODE`: `source` để chạy lint/test/build, hoặc `image` để chạy smoke/Cypress/Allure.
    - `SUT_REPO_URL`: `https://github.com/thu2005/realworld.git`
-   - `SUT_REF`: `jenkins` trong lúc phát triển pipeline; đổi thành `next` sau khi branch này được merge.
+   - `SUT_REF`: `next` (hoặc SHA cần checkout ở source mode).
+   - Với image mode: `IMAGE_TAG` phải là full SHA đã được push lên GHCR; xem [hướng dẫn bàn giao](person-e-handoff.md).
 
 Lần chạy đầu sẽ lâu hơn vì Jenkins phải tải npm dependencies. Kết quả test nằm tại **Test Result**; XML và log liên quan được lưu trong **Build Artifacts** nếu đã được sinh.
 
@@ -70,17 +72,13 @@ Kiểm tra các điểm sau trong console output:
 
 Không thêm `|| true` hoặc tắt stage để biến build lỗi thành pass. Nếu fail, sửa nguyên nhân rồi chạy lại.
 
-## 6. GitHub webhook
+## 6. Trigger từ GitHub Actions
 
-Webhook chỉ cấu hình khi Jenkins có URL mà GitHub truy cập được; `localhost` không dùng được từ GitHub.
+Job tích hợp nhận `IMAGE_REPO`/`IMAGE_TAG` qua `jenkins/trigger_jenkins.py` sau bước publish image của Actions. Đặt `JENKINS_URL`, `JENKINS_USER`, `JENKINS_TOKEN` trong GitHub Secrets; tên job phía Actions phải trùng job Jenkins (hiện workflow dùng `ci-cd-demo`). API token được tạo tại Jenkins → tài khoản → Configure/Security → API Token.
 
-1. Vào repository GitHub → **Settings** → **Webhooks** → **Add webhook**.
-2. Payload URL: `https://<jenkins-public-url>/github-webhook/`.
-3. Content type: `application/json`.
-4. Chọn sự kiện push.
-5. Push một commit nhỏ lên branch của job và kiểm tra Jenkins tự chạy.
+Không bật thêm GitHub push webhook hoặc SCM polling cho cùng job tích hợp: push có thể xảy ra trước khi image được publish và gây chạy trùng với Actions API trigger. Webhook là phương án thay thế cho một job source độc lập, không phải bước bắt buộc của image mode.
 
-Nếu Jenkins mới chỉ chạy local, dùng **Build with Parameters** để hoàn thành demo pipeline trước; không mở port Internet chỉ để có webhook.
+Nếu Jenkins chỉ chạy local, GitHub-hosted runner không truy cập được `localhost`. Dùng **Build with Parameters** hoặc API client từ máy local để demo; muốn tự động xuyên suốt cần runner cùng mạng hoặc URL Jenkins mà runner truy cập được. Không đánh dấu bước kết nối này đã thành công chỉ vì stage Actions được skip khi thiếu secret.
 
 Nếu container báo `healthy` nhưng `http://localhost:18080` không truy cập được, chạy:
 
