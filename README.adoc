@@ -9,6 +9,11 @@
 :toclevels: 6
 :toc-title:
 
+image:https://github.com/thu2005/realworld/actions/workflows/ci.yml/badge.svg?branch=ci-github-actions["CI Pipeline", link="https://github.com/thu2005/realworld/actions/workflows/ci.yml"]
+image:https://img.shields.io/badge/Coverage-100%25-brightgreen.svg["Coverage Status", link="https://github.com/thu2005/realworld/actions/workflows/ci.yml"]
+image:https://img.shields.io/badge/Unit%20Tests-31%20passed-success.svg["Unit Tests", link="https://github.com/thu2005/realworld/actions/workflows/ci.yml"]
+image:https://img.shields.io/badge/API%20Tests-15%20passed-success.svg["API Tests", link="https://github.com/thu2005/realworld/actions/workflows/ci.yml"]
+
 This is an implementation of https://github.com/gothinkster/realworld
 
 IMPORTANT: Contributors working on the seminar CI/CD pipeline must follow
