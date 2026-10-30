@@ -42,6 +42,30 @@ describe('Unit Tests: Helpers & Utilities (lib.js)', () => {
       const [, ok] = lib.validatePositiveInteger('abc');
       expect(ok).toBe(false);
     });
+
+    // --- DATA-DRIVEN TESTING (DDT) with test.each ---
+    describe('Data-Driven Parameterized Suite (test.each)', () => {
+      test.each([
+        [42, 42, true, 'positive integer'],
+        ['100', 100, true, 'numeric string'],
+        [0, 0, true, 'zero boundary value'],
+        [-5, -5, false, 'negative integer'],
+        [3.14, 3.14, false, 'floating point number'],
+        ['', 0, false, 'empty string'],
+        ['abc', NaN, false, 'non-numeric string'],
+      ])(
+        'DDT Case: validatePositiveInteger(%p) -> [val: %p, ok: %p] (%s)',
+        (input, expectedVal, expectedOk) => {
+          const [val, ok] = lib.validatePositiveInteger(input);
+          expect(ok).toBe(expectedOk);
+          if (Number.isNaN(expectedVal)) {
+            expect(Number.isNaN(val)).toBe(true);
+          } else {
+            expect(val).toBe(expectedVal);
+          }
+        }
+      );
+    });
   });
 
   describe('validateParam', () => {
