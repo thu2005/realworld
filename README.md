@@ -1,6 +1,6 @@
 # RealWorld Conduit - Fullstack Example App with CI/CD Pipeline
 
-[![CI Pipeline](https://github.com/thu2005/realworld/actions/workflows/ci.yml/badge.svg?branch=ci-github-actions)](https://github.com/thu2005/realworld/actions/workflows/ci.yml)
+[![CI Pipeline](https://github.com/thu2005/realworld/actions/workflows/ci.yml/badge.svg?branch=next)](https://github.com/thu2005/realworld/actions/workflows/ci.yml)
 [![Coverage Status](https://img.shields.io/badge/Coverage-100%25-brightgreen.svg)](https://github.com/thu2005/realworld/actions/workflows/ci.yml)
 [![Unit Tests](https://img.shields.io/badge/Unit%20Tests-31%20passed-success.svg)](https://github.com/thu2005/realworld/actions/workflows/ci.yml)
 [![API Tests](https://img.shields.io/badge/API%20Tests-15%20passed-success.svg)](https://github.com/thu2005/realworld/actions/workflows/ci.yml)
@@ -15,7 +15,7 @@ An implementation of the [RealWorld](https://github.com/gothinkster/realworld) s
 
 | Component | Status / Badge | Test Scope & Reports |
 |---|:---:|---|
-| **GitHub Actions CI** | [![CI Pipeline](https://github.com/thu2005/realworld/actions/workflows/ci.yml/badge.svg?branch=ci-github-actions)](https://github.com/thu2005/realworld/actions/workflows/ci.yml) | Automated build, lint, Mocha + Jest unit tests, Newman + SuperTest API tests, security audit, Docker image |
+| **GitHub Actions CI** | [![CI Pipeline](https://github.com/thu2005/realworld/actions/workflows/ci.yml/badge.svg?branch=next)](https://github.com/thu2005/realworld/actions/workflows/ci.yml) | Automated build, lint, Mocha + Jest unit tests, Newman + SuperTest API tests, security audit, Docker image |
 | **Jest Unit Tests (Task C-1)** | [![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen.svg)](https://github.com/thu2005/realworld/actions/workflows/ci.yml) | 31 unit tests covering models, auth helpers, utility functions (Statements: 100%, Lines: 100%, Functions: 100%, Branches: 94.73%) |
 | **SuperTest API Tests (Task C-2)** | [![API Tests](https://img.shields.io/badge/SuperTest-15%20passed-success.svg)](https://github.com/thu2005/realworld/actions/workflows/ci.yml) | 15 integration tests covering Auth, User CRUD, Articles, Tags, Profiles, Comments |
 | **JUnit XML Reporting (Task C-3)** | [![JUnit XML](https://img.shields.io/badge/JUnit%20XML-Configured-blue.svg)](https://github.com/thu2005/realworld/actions/workflows/ci.yml) | Standard JUnit XML output for CI & Jenkins (`test-reports/junit/jest-unit.xml`, `test-reports/junit/jest-api.xml`) |
