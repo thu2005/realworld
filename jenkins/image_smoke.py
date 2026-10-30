@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import re
+import socket
 import subprocess
 import sys
 import time
@@ -110,6 +111,17 @@ def start(state):
            '--env', 'PORT=3000', '--env', 'NODE_ENV=development', state['image_id'])
 
 
+def connect_agent(state):
+    """Connect this trusted Jenkins container to the private SUT network."""
+    if not owned(state, 'network', state['network']):
+        raise RuntimeError('SUT network does not exist')
+    agent = socket.gethostname()
+    docker('container', 'inspect', agent)
+    docker('network', 'connect', state['network'], agent)
+    state['jenkins_container'] = agent
+    state['base_url'] = 'http://{}:3000'.format(state['container'])
+
+
 def smoke(state):
     url = 'http://{}:3000{}'.format(state['container'], state['smoke_path'])
     result = docker('run', '--rm', '--name', state['probe'], '--network', state['network'],
@@ -163,6 +175,16 @@ def finalize(state):
                     docker('rm', '-f', name)
                 except Exception as exc:
                     errors.append(str(exc))
+    agent = state.get('jenkins_container')
+    if agent:
+        try:
+            if owned(state, 'network', state['network']):
+                result = docker('network', 'disconnect', state['network'], agent,
+                                check=False)
+                if result.returncode and 'not connected' not in result.stderr.lower():
+                    errors.append(result.stderr.strip())
+        except Exception as exc:
+            errors.append(str(exc))
     try:
         if owned(state, 'network', state['network']):
             docker('network', 'rm', state['network'])
@@ -189,7 +211,8 @@ def junit(state):
 
 def main():
     phase = sys.argv[1]
-    actions = {'validate': validate, 'pull': pull, 'start': start, 'smoke': smoke, 'finalize': finalize}
+    actions = {'validate': validate, 'pull': pull, 'start': start,
+               'smoke': smoke, 'connect-agent': connect_agent, 'finalize': finalize}
     state = read_state()
     LOGS.mkdir(parents=True, exist_ok=True)
     began = time.monotonic()

@@ -1,6 +1,6 @@
 # Jenkins setup for the RealWorld seminar
 
-> Image-mode integration: see [Jenkins image lifecycle](jenkins-image-mode.md). The source instructions below describe the original baseline; use SCM branch `next` (or the reviewed integration branch), source ref `next`, and `RUN_MODE=source`. The integration job is triggered by Actions API, not a second GitHub push webhook.
+> Image-mode integration: see [Jenkins image lifecycle](jenkins-image-mode.md). Cypress and Allure are documented in [Jenkins Cypress and Allure setup](jenkins-cypress-allure.md). The source instructions below describe the original baseline; use SCM branch `next` (or the reviewed integration branch), source ref `next`, and `RUN_MODE=source`. The integration job is triggered by Actions API, not a second GitHub push webhook.
 
 Tài liệu này dựng pipeline Jenkins tối thiểu cho RealWorld theo `CI_INTEGRATION_CONTRACT.md`. Pipeline hiện chạy trực tiếp từ source; chưa phụ thuộc Docker image, Cypress hoặc Allure của thành viên khác.
 
@@ -36,7 +36,7 @@ docker compose -f docker-compose.jenkins.yml exec jenkins \
   cat /var/jenkins_home/secrets/initialAdminPassword
 ```
 
-Mở `http://localhost:18080`, nhập mật khẩu và tạo tài khoản admin. Các plugin cần thiết đã được cài từ `jenkins/plugins.txt`; không cần cài Blue Ocean hoặc Allure ở bước MVP.
+Mở `http://localhost:18080`, nhập mật khẩu và tạo tài khoản admin. Các plugin cần thiết, gồm Allure, được cài tự động từ `jenkins/plugins.txt`; không cần cài Blue Ocean.
 
 ## 4. Tạo job `ci-cd-demo`
 
@@ -104,9 +104,9 @@ Named volume giữ lại job và lịch sử build. Lệnh sau xóa cả contain
 docker compose -f docker-compose.jenkins.yml down --volumes
 ```
 
-## 8. Điểm nối cho giai đoạn sau
+## 8. Pipeline image và UI test
 
-Khi GitHub Actions đã build image, mở rộng `Jenkinsfile` bằng `IMAGE_REPO` và `IMAGE_TAG` theo contract. Khi Cypress hoặc Allure có output thật, publish đúng các đường dẫn trong `CI_INTEGRATION_CONTRACT.md`. Không thay pipeline source hiện tại trước khi nhánh image chạy ổn định.
+Pipeline image, Cypress và Allure đã được bổ sung. Cách chạy, đường dẫn artifact và cấu hình credential nằm trong [Jenkins Cypress and Allure setup](jenkins-cypress-allure.md). Pipeline source cũ vẫn được giữ bằng `RUN_MODE=source`.
 
 ## 9. Giới hạn đã biết
 

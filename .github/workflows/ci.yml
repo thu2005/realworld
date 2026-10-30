@@ -393,38 +393,48 @@ jobs:
     name: Trigger Jenkins Pipeline
     needs: docker-push
     runs-on: ubuntu-latest
-    if: always() && (needs.docker-push.result == 'success' || needs.docker-push.result == 'skipped')
+    if: needs.docker-push.result == 'success'
     steps:
+      - name: Checkout trigger client
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
       - name: Display CI Contract payload
         run: |
           echo "========================================="
           echo " CI Integration Contract Payload"
           echo "========================================="
           echo "SUT_REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git"
-          echo "SUT_REF: ${{ github.ref_name }}"
+          echo "SUT_REF: ${{ github.sha }}"
           echo "IMAGE_REPO: ${{ env.IMAGE_NAME }}"
           echo "IMAGE_TAG: ${{ github.sha }}"
           echo "========================================="
 
-      - name: Trigger Jenkins webhook / parameterized build
+      - name: Trigger Jenkins and wait for result
         env:
           JENKINS_URL: ${{ secrets.JENKINS_URL }}
           JENKINS_USER: ${{ secrets.JENKINS_USER }}
           JENKINS_TOKEN: ${{ secrets.JENKINS_TOKEN }}
+          JENKINS_JOB: ci-cd-demo
+          SUT_REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+          SUT_REF: ${{ github.sha }}
+          IMAGE_REPO: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           if [ -z "$JENKINS_URL" ]; then
             echo "Notice: JENKINS_URL is not configured in GitHub Secrets."
             echo "Skipping direct Jenkins HTTP trigger. Ready for manual trigger or SCM polling."
           else
-            echo "Triggering Jenkins job at $JENKINS_URL/job/ci-cd-demo/buildWithParameters..."
-            curl -s -X POST "$JENKINS_URL/job/ci-cd-demo/buildWithParameters" \
-              --user "$JENKINS_USER:$JENKINS_TOKEN" \
-              --data-urlencode "SUT_REPO_URL=${{ github.server_url }}/${{ github.repository }}.git" \
-              --data-urlencode "SUT_REF=${{ github.ref_name }}" \
-              --data-urlencode "IMAGE_REPO=${{ env.IMAGE_NAME }}" \
-              --data-urlencode "IMAGE_TAG=${{ github.sha }}" \
-              -o test-reports/jenkins-response.txt -w "HTTP Status: %{http_code}\n" || true
+            python3 jenkins/trigger_jenkins.py
           fi
+
+      - name: Upload Jenkins handoff result
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: jenkins-handoff
+          path: test-reports/jenkins-result.json
+          if-no-files-found: ignore
+          retention-days: 7
 
   allure-report:
     name: Allure Report Dashboard
